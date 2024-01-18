@@ -412,47 +412,42 @@ LJLIB_PUSH(top-2) LJLIB_SET(!)  /* Set environment. */
 #include <io.h>
 #endif
 #include <stdio.h>
+#include <stdlib.h> // For malloc and free
 
-FILE* open_file_w(const wchar_t* filename, const wchar_t* mode) {
-    // Use CreateFileW to open the file
-    HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE) {
-        return NULL;
-    }
-
-    // Convert the handle to a file descriptor
-    int fd = _open_osfhandle((intptr_t)hFile, _O_RDONLY);
-    if (fd == -1) {
-        CloseHandle(hFile);
-        return NULL;
-    }
-
-    // Convert the file descriptor to a FILE* stream
-    FILE* file = _fdopen(fd, "r"); // Note: mode should be consistent with GENERIC_READ/_O_RDONLY
-    if (file == NULL) {
-        _close(fd);
-    }
-
-    return file;
-}
-
-LJLIB_CF(io_open)
-{
+LJLIB_CF(io_open) {
   const char *fname = strdata(lj_lib_checkstr(L, 1));
   GCstr *s = lj_lib_optstr(L, 2);
   const char *mode = s ? strdata(s) : "r";
   IOFileUD *iof = io_file_new(L);
 
-  size_t len = mbstowcs(NULL, fname, 0); 
+  // Convert fname to wide char
+  size_t len = mbstowcs(NULL, fname, 0);
+  if (len == (size_t)-1) {
+    // Conversion error
+    return luaL_fileresult(L, 0, "Conversion error");
+  }
   wchar_t *wfname = (wchar_t *)malloc((len + 1) * sizeof(wchar_t));
+  if (!wfname) {
+    // Memory allocation error
+    return luaL_fileresult(L, 0, "Memory allocation error");
+  }
   mbstowcs(wfname, fname, len + 1);
 
+  // Convert mode to wide char
   size_t mode_len = mbstowcs(NULL, mode, 0);
+  if (mode_len == (size_t)-1) {
+    free(wfname);
+    return luaL_fileresult(L, 0, "Conversion error");
+  }
   wchar_t *wmode = (wchar_t *)malloc((mode_len + 1) * sizeof(wchar_t));
+  if (!wmode) {
+    free(wfname);
+    return luaL_fileresult(L, 0, "Memory allocation error");
+  }
   mbstowcs(wmode, mode, mode_len + 1);
 
   #ifdef _WIN32
-    iof->fp = _wfopen(wfname, wmode);
+    iof->fp = open_file_w(wfname, wmode);
   #else
     iof->fp = fopen(fname, mode);
   #endif
