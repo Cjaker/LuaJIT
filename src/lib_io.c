@@ -404,6 +404,10 @@ LJLIB_PUSH(top-1) LJLIB_SET(__index)
 
 #define LJLIB_MODULE_io
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 LJLIB_PUSH(top-2) LJLIB_SET(!)  /* Set environment. */
 
 FILE* open_file_w(const wchar_t* filename, const wchar_t* mode) {
