@@ -406,6 +406,29 @@ LJLIB_PUSH(top-1) LJLIB_SET(__index)
 
 LJLIB_PUSH(top-2) LJLIB_SET(!)  /* Set environment. */
 
+FILE* open_file_w(const wchar_t* filename, const wchar_t* mode) {
+    // Use CreateFileW to open the file
+    HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        return NULL;
+    }
+
+    // Convert the handle to a file descriptor
+    int fd = _open_osfhandle((intptr_t)hFile, _O_RDONLY);
+    if (fd == -1) {
+        CloseHandle(hFile);
+        return NULL;
+    }
+
+    // Convert the file descriptor to a FILE* stream
+    FILE* file = _fdopen(fd, "r"); // Note: mode should be consistent with GENERIC_READ/_O_RDONLY
+    if (file == NULL) {
+        _close(fd);
+    }
+
+    return file;
+}
+
 LJLIB_CF(io_open)
 {
   const char *fname = strdata(lj_lib_checkstr(L, 1));
