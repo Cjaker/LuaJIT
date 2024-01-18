@@ -412,7 +412,24 @@ LJLIB_CF(io_open)
   GCstr *s = lj_lib_optstr(L, 2);
   const char *mode = s ? strdata(s) : "r";
   IOFileUD *iof = io_file_new(L);
-  iof->fp = fopen(fname, mode);
+
+  size_t len = mbstowcs(NULL, fname, 0); 
+  wchar_t *wfname = (wchar_t *)malloc((len + 1) * sizeof(wchar_t));
+  mbstowcs(wfname, fname, len + 1);
+
+  size_t mode_len = mbstowcs(NULL, mode, 0);
+  wchar_t *wmode = (wchar_t *)malloc((mode_len + 1) * sizeof(wchar_t));
+  mbstowcs(wmode, mode, mode_len + 1);
+
+  #ifdef _WIN32
+    iof->fp = _wfopen(wfname, wmode);
+  #else
+    iof->fp = fopen(fname, mode);
+  #endif
+
+  free(wfname);
+  free(wmode);
+
   return iof->fp != NULL ? 1 : luaL_fileresult(L, 0, fname);
 }
 
