@@ -5898,7 +5898,7 @@ lua_Debug ar;
 if(lua_getstack(L,level,&ar)){
 lua_getinfo(L,"Sl",&ar);
 if(ar.currentline>0){
-lua_pushfstring(L,"%s:%d: ",ar.short_src,ar.currentline);
+lua_pushfstring(L,"%s:%d: ",ar.source,ar.currentline);
 return;
 }
 }
