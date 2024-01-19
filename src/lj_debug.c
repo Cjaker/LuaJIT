@@ -685,7 +685,7 @@ LUALIB_API void luaL_traceback (lua_State *L, lua_State *L1, const char *msg,
     if (isffunc(fn) && !*ar.namewhat)
       lua_pushfstring(L, "\n\t[builtin#%d]:", fn->c.ffid);
     else
-      lua_pushfstring(L, "\n\t%s:", ar.short_src);
+      lua_pushfstring(L, "\n\t%s:", ar.source);
     if (ar.currentline > 0)
       lua_pushfstring(L, "%d:", ar.currentline);
     if (*ar.namewhat) {
@@ -697,7 +697,7 @@ LUALIB_API void luaL_traceback (lua_State *L, lua_State *L1, const char *msg,
 	lua_pushfstring(L, " at %p", fn->c.f);
       } else {
 	lua_pushfstring(L, " in function <%s:%d>",
-			ar.short_src, ar.linedefined);
+			ar.source, ar.linedefined);
       }
     }
     if ((int)(L->top - L->base) - top >= 15)
