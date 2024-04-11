@@ -20,7 +20,7 @@
 #define LUA_DBLIBNAME	"debug"
 #define LUA_BITLIBNAME	"bit"
 #define LUA_JITLIBNAME	"jit"
-#define LUA_FFILIBNAME	"ffi"
+#define LUA_FFILIBNAME	"dffi"
 
 LUALIB_API int luaopen_base(lua_State *L);
 LUALIB_API int luaopen_math(lua_State *L);
